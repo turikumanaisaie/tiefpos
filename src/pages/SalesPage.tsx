@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Plus, Minus, Trash2, ScanBarcode, Receipt } from "lucide-react";
+import { ShoppingCart, Plus, Minus, ScanBarcode, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CartItem } from "@/types/pos";
-import { findProductByBarcode } from "@/stores/posStore";
-import { saveSale } from "@/stores/posStore";
+import { findProductByBarcode, saveSale } from "@/stores/posStore";
 import { generateReceipt } from "@/utils/receiptPdf";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import { toast } from "sonner";
@@ -14,23 +13,28 @@ const SalesPage = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [scanning, setScanning] = useState(false);
   const [manualCode, setManualCode] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const addToCart = (barcode: string) => {
-    const product = findProductByBarcode(barcode);
-    if (!product) {
-      toast.error("Product not found for this barcode");
-      return;
-    }
-    setCart((prev) => {
-      const existing = prev.find((c) => c.product.id === product.id);
-      if (existing) {
-        return prev.map((c) =>
-          c.product.id === product.id ? { ...c, quantity: c.quantity + 1 } : c
-        );
+  const addToCart = async (barcode: string) => {
+    try {
+      const product = await findProductByBarcode(barcode);
+      if (!product) {
+        toast.error("Product not found for this barcode");
+        return;
       }
-      return [...prev, { product, quantity: 1 }];
-    });
-    toast.success(`Added ${product.name}`);
+      setCart((prev) => {
+        const existing = prev.find((c) => c.product.id === product.id);
+        if (existing) {
+          return prev.map((c) =>
+            c.product.id === product.id ? { ...c, quantity: c.quantity + 1 } : c
+          );
+        }
+        return [...prev, { product, quantity: 1 }];
+      });
+      toast.success(`Added ${product.name}`);
+    } catch {
+      toast.error("Error looking up product");
+    }
   };
 
   const updateQty = (id: string, delta: number) => {
@@ -45,18 +49,19 @@ const SalesPage = () => {
 
   const total = cart.reduce((s, c) => s + c.product.price * c.quantity, 0);
 
-  const completeSale = () => {
-    if (cart.length === 0) return;
-    const sale = {
-      id: crypto.randomUUID(),
-      items: cart,
-      total,
-      date: new Date().toISOString(),
-    };
-    saveSale(sale);
-    generateReceipt(cart, total);
-    setCart([]);
-    toast.success("Sale completed! Receipt downloaded.");
+  const completeSale = async () => {
+    if (cart.length === 0 || loading) return;
+    setLoading(true);
+    try {
+      await saveSale(cart, total);
+      generateReceipt(cart, total);
+      setCart([]);
+      toast.success("Sale completed! Receipt downloaded.");
+    } catch {
+      toast.error("Error completing sale");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -184,9 +189,10 @@ const SalesPage = () => {
           </div>
           <Button
             onClick={completeSale}
+            disabled={loading}
             className="w-full gap-2 h-12 text-base gradient-primary text-primary-foreground hover:opacity-90"
           >
-            <Receipt className="w-5 h-5" /> Complete Sale & Print Receipt
+            <Receipt className="w-5 h-5" /> {loading ? "Processing..." : "Complete Sale & Print Receipt"}
           </Button>
         </motion.div>
       )}

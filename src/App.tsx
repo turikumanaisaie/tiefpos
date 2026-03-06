@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import ProductsPage from "./pages/ProductsPage";
 import ScanAddPage from "./pages/ScanAddPage";
 import HistoryPage from "./pages/HistoryPage";
+import DashboardPage from "./pages/DashboardPage";
 import InstallPage from "./pages/InstallPage";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/scan-add" element={<ScanAddPage />} />
           <Route path="/history" element={<HistoryPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/install" element={<InstallPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
