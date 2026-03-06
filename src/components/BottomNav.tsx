@@ -1,11 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
-import { Package, ShoppingCart, BarChart3, ScanBarcode } from "lucide-react";
+import { Package, ShoppingCart, BarChart3, ScanBarcode, TrendingUp } from "lucide-react";
 
 const tabs = [
   { path: "/", icon: ShoppingCart, label: "Sales" },
   { path: "/products", icon: Package, label: "Products" },
   { path: "/scan-add", icon: ScanBarcode, label: "Add" },
   { path: "/history", icon: BarChart3, label: "History" },
+  { path: "/dashboard", icon: TrendingUp, label: "Analytics" },
 ];
 
 const BottomNav = () => {
@@ -20,14 +21,14 @@ const BottomNav = () => {
             <Link
               key={tab.path}
               to={tab.path}
-              className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-colors ${
+              className={`flex flex-col items-center gap-1 px-2 py-1 rounded-lg transition-colors ${
                 active
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <tab.icon className={`w-5 h-5 ${active ? "stroke-[2.5]" : ""}`} />
-              <span className="text-[11px] font-medium">{tab.label}</span>
+              <span className="text-[10px] font-medium">{tab.label}</span>
             </Link>
           );
         })}

@@ -12,33 +12,37 @@ const ScanAddPage = () => {
   const [form, setForm] = useState({ name: "", price: 0, category: "", stock: 0 });
   const [showScanner, setShowScanner] = useState(true);
 
-  const handleScan = (code: string) => {
-    const existing = findProductByBarcode(code);
-    if (existing) {
-      toast.info(`Product "${existing.name}" already exists with this barcode`);
-    }
+  const handleScan = async (code: string) => {
+    try {
+      const existing = await findProductByBarcode(code);
+      if (existing) {
+        toast.info(`Product "${existing.name}" already exists with this barcode`);
+      }
+    } catch {}
     setScannedCode(code);
     setShowScanner(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!scannedCode || !form.name) {
       toast.error("Scan a barcode and enter a name");
       return;
     }
-    addProduct({
-      id: crypto.randomUUID(),
-      barcode: scannedCode,
-      name: form.name,
-      price: form.price,
-      category: form.category,
-      stock: form.stock,
-      createdAt: new Date().toISOString(),
-    });
-    toast.success("Product registered!");
-    setScannedCode("");
-    setForm({ name: "", price: 0, category: "", stock: 0 });
-    setShowScanner(true);
+    try {
+      await addProduct({
+        barcode: scannedCode,
+        name: form.name,
+        price: form.price,
+        category: form.category,
+        stock: form.stock,
+      });
+      toast.success("Product registered!");
+      setScannedCode("");
+      setForm({ name: "", price: 0, category: "", stock: 0 });
+      setShowScanner(true);
+    } catch {
+      toast.error("Error saving product");
+    }
   };
 
   return (

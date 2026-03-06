@@ -5,10 +5,23 @@ import { Button } from "@/components/ui/button";
 import { getSales } from "@/stores/posStore";
 import { generateReceipt } from "@/utils/receiptPdf";
 import { Sale } from "@/types/pos";
+import { toast } from "sonner";
 
 const HistoryPage = () => {
   const [sales, setSales] = useState<Sale[]>([]);
-  useEffect(() => setSales(getSales().reverse()), []);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setSales(await getSales());
+      } catch {
+        toast.error("Failed to load sales");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
   const todayTotal = sales
     .filter((s) => new Date(s.date).toDateString() === new Date().toDateString())
@@ -32,7 +45,9 @@ const HistoryPage = () => {
       </div>
 
       <div className="space-y-2">
-        {sales.length === 0 ? (
+        {loading ? (
+          <div className="py-16 text-center text-muted-foreground text-sm">Loading...</div>
+        ) : sales.length === 0 ? (
           <div className="py-16 text-center text-muted-foreground text-sm">
             No sales recorded yet
           </div>
@@ -67,8 +82,8 @@ const HistoryPage = () => {
                 </div>
               </div>
               <div className="text-xs text-muted-foreground">
-                {sale.items.map((item) => (
-                  <span key={item.product.id} className="mr-2">
+                {sale.items.map((item, idx) => (
+                  <span key={idx} className="mr-2">
                     {item.product.name} ×{item.quantity}
                   </span>
                 ))}
